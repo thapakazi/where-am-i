@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share My Location</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .coords {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .coord-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .coord-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .coord-value {
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        .accuracy {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 10px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .secondary-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .secondary-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #e53e3e;
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #48bb78;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .coord-item {
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+
+        .map-container {
+            width: 100%;
+            height: 200px;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .qr-section {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 10px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .qr-code {
+            margin: 15px auto;
+            display: inline-block;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .qr-subtitle {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #718096;
+            text-align: center;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+
+            .container {
+                box-shadow: none;
+                border: 1px solid #ccc;
+                background: white;
+            }
+
+            .buttons {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📍</div>
+        <h1>Share My Location</h1>
+        <p class="subtitle">Get and share your current GPS coordinates</p>
+
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <span>Getting your location...</span>
+            </div>
+        </div>
+
+<div class="footer">
+            src:<a href="https://github.com/thapakazi/where-am-i/blob/main/index.html" target="_blank">github</a>️ by <a href="https://thapakazi.com" target="_blank">thapakazi</a>
+        </div>
+    </div>
+
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        let currentLocation = null;
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatCoordinate(coord) {
+            return coord.toFixed(6);
+        }
+
+        function displayLocation(position) {
+            const { latitude, longitude, accuracy } = position.coords;
+            currentLocation = { latitude, longitude, accuracy };
+
+            const content = `
+                <div class="buttons">
+                    <button class="primary-btn" onclick="shareLocation()">Share Location</button>
+                    <button class="secondary-btn" onclick="copyCoordinates()">Copy Coordinates</button>
+                    <button class="secondary-btn" onclick="openInMaps()">Open in Maps</button>
+                </div>
+
+                <div class="map-container">
+                    <iframe
+                        src="https://maps.google.com/maps?q=${latitude},${longitude}&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                        width="100%"
+                        height="100%"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+
+
+                <div class="qr-section">
+                    <div class="qr-title">Scan to Open Location</div>
+                    <div class="qr-subtitle">${formatCoordinate(latitude)}, ${formatCoordinate(longitude)} | Accuracy: ±${Math.round(accuracy)}m</div>
+                    <div class="qr-code">
+                        <img src="${generateQRCode(`https://maps.google.com/?q=${latitude},${longitude}`, 120)}" alt="QR Code" style="border-radius: 4px;">
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = content;
+        }
+
+        function displayError(error) {
+            let message;
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = "Location access denied. Please enable location permissions and refresh.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = "Location information unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    message = "Location request timed out.";
+                    break;
+                default:
+                    message = "An unknown error occurred while retrieving location.";
+            }
+
+            document.getElementById('content').innerHTML = `
+                <div class="error">${message}</div>
+                <div class="buttons">
+                    <button class="primary-btn" onclick="getLocation()">Try Again</button>
+                </div>
+            `;
+        }
+
+        function getLocation() {
+            document.getElementById('content').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <span>Getting your location...</span>
+                </div>
+            `;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    displayLocation,
+                    displayError,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000
+                    }
+                );
+            } else {
+                displayError({ code: 'NOT_SUPPORTED', message: 'Geolocation is not supported by this browser.' });
+            }
+        }
+
+        function shareLocation() {
+            if (!currentLocation) return;
+
+            const { latitude, longitude } = currentLocation;
+            const mapsUrl = `https://maps.google.com/?q=${latitude},${longitude}`;
+            const text = `My current location:\nLatitude: ${formatCoordinate(latitude)}\nLongitude: ${formatCoordinate(longitude)}\n\nGoogle Maps: ${mapsUrl}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'My Location',
+                    text: `My current location: ${formatCoordinate(latitude)}, ${formatCoordinate(longitude)}`,
+                    url: mapsUrl
+                }).then(() => {
+                    showToast('Location shared successfully!');
+                }).catch(() => {
+                    copyToClipboard(text);
+                });
+            } else {
+                copyToClipboard(text);
+            }
+        }
+
+        function copyCoordinates() {
+            if (!currentLocation) return;
+
+            const { latitude, longitude } = currentLocation;
+            const coords = `${formatCoordinate(latitude)}, ${formatCoordinate(longitude)}`;
+
+            copyToClipboard(coords);
+        }
+
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('Copied to clipboard!');
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(text);
+                });
+            } else {
+                fallbackCopyTextToClipboard(text);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                showToast('Copied to clipboard!');
+            } catch (err) {
+                showToast('Copy failed - please copy manually');
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        function openInMaps() {
+            if (!currentLocation) return;
+
+            const { latitude, longitude } = currentLocation;
+            const url = `https://maps.google.com/?q=${latitude},${longitude}`;
+            window.open(url, '_blank');
+        }
+
+        // QR Code generation
+        function generateQRCode(text, size = 120) {
+            const encodedText = encodeURIComponent(text);
+            return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedText}`;
+        }
+
+        // Initialize
+        getLocation();
+    </script>
+</body>
+</html>
