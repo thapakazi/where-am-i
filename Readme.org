@@ -1,0 +1,24 @@
+#+TITLE: where-am-i
+
+lost someone non-techie somewhere ??
+https://where-am-i.pages.dev to rescue for easy one time location sharing
+
+** why ?
+
+- Simple sutpid  location sharing tool that gets your GPS coordinates and generates shareable links with QR codes.
+
+-  Your location data is processed locally in your browser and never stored on external servers.
+
+- Only shares coordinates you explicitly choose to share.
+- Uses Google Maps for map location details and QR code for sharing.
+
+** for what ?
+  - Perfect for meeting up, sharing spots, or emergency situations.
+  -  No registration required - just open and share!
+
+** what not ?
+- It doesn't track you, it is just to quick share your current gps coordinate
+
+** deps:
+- maps: https://maps.google.com
+- qrcode: https://goqr.me/api/
